@@ -2,11 +2,14 @@
 # /project/assets/
 # ├── characterA/
 #    │   ├── v001/
-#    │   │   ├── characterA_diffuse.exr
+#    │   │   ├── characterA_diffuse_v0001_0001.exr
+#    │   │   ├── characterA_diffuse_v0001_0031.exr
 #    │   ├── v002/
-#    │   │   ├── characterA_diffuse.exr
+#    │   │   ├── characterA_diffuse_v0002_0001.exr
+#    │   │   ├── characterA_diffuse_v0002_0031.exr
 #    │   ├── v003/
-#    │       ├── characterA_diffuse.exr
+#    │   │   ├── characterA_diffuse_v0003_0001.exr
+#    │   │   ├── characterA_diffuse_v0003_0031.exr
 
 import nuke
 import os
@@ -19,7 +22,6 @@ class AssetManager(QtWidgets.QDialog):
         super(AssetManager, self).__init__()
         self.setWindowTitle("Asset Manager")
         self.setGeometry(200, 200, 800, 600)
-
         
         self.asset_table = QtWidgets.QTableWidget()
         self.asset_table.setColumnCount(7)
@@ -101,27 +103,24 @@ class AssetManager(QtWidgets.QDialog):
                 return file_name
         name = file_name(node)
 
-        
         node_name = node.name()
         node_item = create_item(node_name)
-        node_item.setData(QtCore.Qt.UserRole, node_name)  
+        node_item.setData(QtCore.Qt.UserRole, node_name) 
         
         self.asset_table.setItem(row, 0, node_item)  
-        self.asset_table.setItem(row, 1, create_item(name)) 
+        self.asset_table.setItem(row, 1, create_item(name))  
         self.asset_table.setItem(row, 2, create_item(self.node_type(node)))  
         self.asset_table.setItem(row, 3, create_item(file_path))  
         self.asset_table.setItem(row, 4, create_item(status))  
         self.asset_table.setItem(row, 5, create_item(self.get_color_space(node)))  
-        self.asset_table.setItem(row, 6, create_item(self.get_frame_range(node)))  
+        self.asset_table.setItem(row, 6, create_item(self.get_frame_range(node))) 
 
     def navigate_to_node(self, row, column):
-        
         if column == 0:  
-            node_name = self.asset_table.item(row, 0).text()  
+            node_name = self.asset_table.item(row, 0).text() 
             
             node = nuke.toNode(node_name)
             if node:
-                
                 for n in nuke.allNodes():
                     n.setSelected(False)               
                 node.setSelected(True)                
@@ -136,43 +135,62 @@ class AssetManager(QtWidgets.QDialog):
     
         file_filter = "Supported Files (" + " ".join(["*" + ext for ext in valid_formats]) + ")"
         missing_assets = False  
+        
 
         for row in range(self.asset_table.rowCount()):
-           
             node_name = self.asset_table.item(row, 0).text()
-            
             file_path = self.asset_table.item(row, 3).text()
     
             node = nuke.toNode(node_name)
             if node:
                 if not file_path or not os.path.exists(file_path):
                     missing_assets = True
-                    
                     self.asset_table.setItem(row, 4, QtWidgets.QTableWidgetItem("Missing File"))
     
                 elif os.path.isdir(file_path): 
                     valid_files = [f for f in os.listdir(file_path) if os.path.splitext(f)[1].lower() in valid_formats]
                     if not valid_files:
                         missing_assets = True
-                        
                         self.asset_table.setItem(row, 4, QtWidgets.QTableWidgetItem("Location Error"))
     
-                
                 if self.asset_table.item(row, 4).text() in ["Missing File", "Location Error"]:
                     file_dialog = QtWidgets.QFileDialog()
                     new_file_path, _ = file_dialog.getOpenFileName(self, "Select New Asset Path", "", file_filter)
-    
-                    if new_file_path:                       
+                    
+                    selected_item = os.path.basename(new_file_path)
+                    dir_loc_selected_item = os.path.dirname(new_file_path)
+                    item_list_selected_loc = os.listdir(dir_loc_selected_item)
+                    file_ext_selected_item = os.path.splitext(selected_item)[1].lower()
+                                  
+                    valid_video_formats = [".mov", ".mp4", ".avi", ".mpg", ".mpeg", ".wmv", ".mkv", ".flv", ".webm"]
+                    valid_image_formats = [".exr", ".dpx", ".tif", ".tiff", ".png", ".jpg", ".jpeg", ".tga"]
+
+                    if file_ext_selected_item in valid_video_formats or file_ext_selected_item in valid_image_formats:                       
                         if not any(new_file_path.lower().endswith(ext) for ext in valid_formats):
                             QtWidgets.QMessageBox.warning(self, "Invalid File Type", "Please select a supported 2D or 3D file type.")
                             continue
+                        if file_ext_selected_item in valid_video_formats:
+                            node["file"].setValue(new_file_path)                                                         
+                            self.asset_table.setItem(row, 3, QtWidgets.QTableWidgetItem(new_file_path)) 
+                            self.asset_table.setItem(row, 4, QtWidgets.QTableWidgetItem("Relinked"))
+                            break
+
+                        else:
+  
+                            first_frame = min(item_list_selected_loc).split("_")[-1].split(".")[0]
+                            last_frame = max(item_list_selected_loc).split("_")[-1].split(".")[0]
+                            
+                            name_part, frame_part_ext = selected_item.rsplit("_", 1)
+                            frame_part, ext = frame_part_ext.split(".")
+                            updated_file_path = join(dir_loc_selected_item, f"{name_part}_####.{ext}")
+                            node["file"].setValue(updated_file_path.replace("\\", "/"))
+                            node["first"].setValue(int(first_frame))
+                            node["last"].setValue(int(last_frame))
+
+                            self.asset_table.setItem(row, 3, QtWidgets.QTableWidgetItem(new_file_path)) 
+                            self.asset_table.setItem(row, 4, QtWidgets.QTableWidgetItem("Relinked"))
+                            break
     
-                        node["file"].setValue(new_file_path)  
-                        
-                        self.asset_table.setItem(row, 3, QtWidgets.QTableWidgetItem(new_file_path)) 
-                        self.asset_table.setItem(row, 4, QtWidgets.QTableWidgetItem("Relinked")) 
-    
-        
         error_remaining = any(
             self.asset_table.item(row, 4).text() in ["Location Error", "Missing File"]
             for row in range(self.asset_table.rowCount())
@@ -216,12 +234,15 @@ class AssetManager(QtWidgets.QDialog):
                             new_node = nuke.createNode("Read")
                             new_node["file"].setValue(item_path.replace("\\", "/"))
                             if file_ext in valid_image_formats:
+
+                                first_frame = min(latest_items).split("_")[-1].split(".")[0]
+                                last_frame = max(latest_items).split("_")[-1].split(".")[0]
                                 name_part, frame_part_ext = item.rsplit("_", 1)
                                 frame_part, ext = frame_part_ext.split(".")
                                 updated_file_path = join(selected_version_path, f"{name_part}_####.{ext}")
                                 new_node["file"].setValue(updated_file_path.replace("\\", "/"))
-                                new_node["first"].setValue(int(f"{frame_part}"))
-                                new_node["last"].setValue(len(latest_items))
+                                new_node["first"].setValue(int(first_frame))
+                                new_node["last"].setValue(int(last_frame))
                             break
                 else:
                     QtWidgets.QMessageBox.information(self, "Updated Version", "The asset is already up-to-date.")
@@ -232,14 +253,11 @@ class AssetManager(QtWidgets.QDialog):
         save_path, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save Report", "", "CSV Files (*.csv)")
     
         if not save_path:
-            return 
+            return  
     
         with open(save_path, "w", newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            
+            writer = csv.writer(csvfile)            
             writer.writerow(["Node", "Asset", "Type", "Path", "Status", "Colorspace", "Range"])
-    
-            
             for row in range(self.asset_table.rowCount()):
                 row_data = []
                 for col in range(self.asset_table.columnCount()):
@@ -249,12 +267,14 @@ class AssetManager(QtWidgets.QDialog):
                 writer.writerow(row_data)  
     
         QtWidgets.QMessageBox.information(self, "Report Generated", f"Report saved at:\n{save_path}")
-
-
+        
 def show_asset_manager():
     app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
     manager = AssetManager()
     manager.exec_()
-
-
+    
 nuke.menu("Nuke").addCommand("Tools/Asset Manager", show_asset_manager)
+
+
+
+
