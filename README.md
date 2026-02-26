@@ -51,7 +51,7 @@ A Nuke Python GUI tool that scans, manages, relinks, and versions Read node asse
 
 ---
 
-## Installation  
+## Installation
 
 1. Download the script file  
 2. Place it inside your `.nuke` directory  
@@ -59,6 +59,8 @@ A Nuke Python GUI tool that scans, manages, relinks, and versions Read node asse
 
 ```python
 import asset_manager
+
+---
 
 ### Contribution
 
