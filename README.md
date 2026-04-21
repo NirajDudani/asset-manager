@@ -28,7 +28,7 @@ Or click **Code → Download ZIP** on the GitHub page and extract it.
 
 ### Step 2 — Copy the Script
 
-Copy `asset-manager.py` into your `.nuke` directory. The `.nuke` folder lives in your home directory by default:
+Copy `asset_manager.py` into your `.nuke` directory. The `.nuke` folder lives in your home directory by default:
 
 | OS | Default Path |
 |----|-------------|
@@ -45,8 +45,6 @@ Open (or create) the file `menu.py` inside your `.nuke` directory and add this s
 ```python
 import asset_manager
 ```
-
-> **Note:** The import name uses an underscore (`asset_manager`), so make sure the file on disk is named `asset_manager.py` (rename it from `asset-manager.py` if needed). Python cannot import filenames that contain hyphens.
 
 ### Step 4 — Restart Nuke
 
@@ -127,8 +125,8 @@ Click **Generate Report** to export the current table to a `.csv` file. You'll b
 
 | Problem | Fix |
 |---------|-----|
-| Menu entry doesn't appear | Make sure the file is named `asset_manager.py` (underscore, not hyphen) and lives directly inside `.nuke/`. Check Nuke's Script Editor for import errors. |
-| `ModuleNotFoundError: No module named 'asset_manager'` | The filename probably still has a hyphen. Rename it to `asset_manager.py`. |
+| Menu entry doesn't appear | Make sure `asset_manager.py` lives directly inside `.nuke/`. Check Nuke's Script Editor for import errors. |
+| `ModuleNotFoundError: No module named 'asset_manager'` | Verify the file is named exactly `asset_manager.py` and that your `menu.py` contains `import asset_manager`. |
 | "No asset selected" when clicking Available Versions | Click a cell in the **Node** column first to select the asset, then click the button. |
 | Relink doesn't detect frame range | The tool expects filenames ending in `_####.ext` (e.g., `shot_0001.exr`). If your naming convention is different, the auto-detection may not parse correctly. |
 
