@@ -1,16 +1,3 @@
-# For the Available Versions feature to work correctly, your renders should be saved in the following format:
-# /project/assets/
-# ├── characterA/
-#    │   ├── v001/
-#    │   │   ├── characterA_diffuse_v0001_0001.exr
-#    │   │   ├── characterA_diffuse_v0001_0031.exr
-#    │   ├── v002/
-#    │   │   ├── characterA_diffuse_v0002_0001.exr
-#    │   │   ├── characterA_diffuse_v0002_0031.exr
-#    │   ├── v003/
-#    │   │   ├── characterA_diffuse_v0003_0001.exr
-#    │   │   ├── characterA_diffuse_v0003_0031.exr
-
 import nuke
 import os
 from os.path import join
